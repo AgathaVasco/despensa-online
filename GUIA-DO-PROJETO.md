@@ -23,6 +23,8 @@ App de celular para a família controlar a despensa, receber o cardápio da sema
 - **👤 Perfis**: cada pessoa com peso, altura, atividade, objetivo e meta de calorias calculada (fórmula de Mifflin-St Jeor), IMC e água por dia. Crianças: meta manual.
 - **🏡 Casa compartilhada**: cada pessoa da família cria seu login e entra na casa com o **código de convite**.
 
+> **Versão grátis (atual):** a IA está **desligada** (`IA_LIGADA = false` no `index.html`). Funcionam de graça: despensa, colar/digitar lista, cardápio montado com as 32 receitas do app (com modo de preparo), compras, perfis e casa compartilhada. Ficam escondidos até ligar a IA: leitura da foto/QR Code da nota e cardápio "pensado" pela IA. Para ligar depois: Passos 3 e 4 abaixo e mudar para `IA_LIGADA = true`.
+
 > **Modo demonstração:** enquanto o `index.html` estiver com `COLE_AQUI` na configuração, o app abre com dados de exemplo salvos só no aparelho. Dá para ver e testar tudo antes de configurar.
 
 ---
@@ -30,11 +32,10 @@ App de celular para a família controlar a despensa, receber o cardápio da sema
 ## Como colocar no ar (uma vez só)
 
 ### Passo 1 — GitHub (onde o app fica publicado)
-1. Abra o **GitHub Desktop** → **File → Add local repository** → escolha a pasta `Documents\GitHub\despensa-online`.
-2. Ele vai dizer que não é um repositório: clique em **create a repository** → **Create repository**.
-3. Clique em **Publish repository**. **Desmarque** "Keep this code private" (o GitHub Pages grátis exige repositório público; não tem senha nenhuma no código).
-4. No site do GitHub, abra o repositório → **Settings → Pages** → Branch: **main**, pasta **/(root)** → **Save**.
-5. Em 1–2 minutos o app fica em: `https://agathavasco.github.io/despensa-online/` (já abre em modo demonstração).
+✅ **Feito em 22/10/2026.** Repositório `AgathaVasco/despensa-online` (público), Pages em **main / (root)**.
+App no ar: `https://agathavasco.github.io/despensa-online/`
+
+> ⚠️ A pasta do app (o repositório) é **`Documents\GitHub\despensa-online\despensa-online`** (a subpasta). A pasta de fora não é usada. Para mudar o app: editar os arquivos da subpasta → GitHub Desktop → **Commit to main** → **Push origin**.
 
 ### Passo 2 — Supabase (banco de dados e logins)
 1. Em https://supabase.com → **New project** → nome `despensa-online` → crie uma senha do banco (guarde) → região **South America (São Paulo)**.
@@ -42,16 +43,18 @@ App de celular para a família controlar a despensa, receber o cardápio da sema
 3. Menu **Authentication → URL Configuration** → em **Site URL** coloque o endereço do Passo 1.
 4. (Opcional, mais simples para a família) **Authentication → Sign In / Providers → Email** → desligue **Confirm email**. Assim a conta funciona na hora, sem precisar clicar no e-mail.
 
-### Passo 3 — Chave da IA (Anthropic)
+### Passo 3 — Chave da IA (Anthropic) · OPCIONAL, só para ligar a IA
+Dica para gastar quase nada: peça ao Claude para trocar o modelo do robô para o **Claude Haiku** (cerca de 40× mais barato que o Opus).
 1. Em https://console.anthropic.com → crie a conta → **Billing** → adicione créditos (US$ 5 duram bastante; veja os custos abaixo).
 2. **Limits** → defina um limite de gasto mensal (ex.: US$ 10) para não ter surpresa.
 3. **API Keys → Create Key** → copie a chave (começa com `sk-ant-`). Ela só aparece uma vez.
 
-### Passo 4 — O robô de IA no Supabase
+### Passo 4 — O robô de IA no Supabase · OPCIONAL, só para ligar a IA
 1. No Supabase: **Edge Functions → Deploy a new function → Via Editor**.
 2. Nome da função: **`ia`** (exatamente assim). Apague o código de exemplo, cole todo o `2-funcao-ia.ts` → **Deploy**.
 3. Abra a função `ia` → **Details** → desligue **Verify JWT / Enforce JWT verification** → salve. (A própria função confere se a pessoa está logada no app.)
 4. **Edge Functions → Secrets → Add new secret**: nome `ANTHROPIC_API_KEY`, valor = a chave do Passo 3.
+5. No `index.html`, troque `const IA_LIGADA = false;` por `const IA_LIGADA = true;` → Commit e Push.
 
 ### Passo 5 — Ligar o app ao Supabase
 1. No Supabase: **Project Settings → API Keys** (ou **API**). Copie a **Project URL** e a **Publishable key** (`sb_publishable_...`).

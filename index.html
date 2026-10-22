@@ -228,8 +228,12 @@ ol.passos li{margin-bottom:6px}
 //  (Supabase → Project Settings → API). Enquanto estiver "COLE_AQUI",
 //  o app abre em MODO DEMONSTRAÇÃO, com dados de exemplo só neste aparelho.
 // =====================================================================
-const SUPABASE_URL = "COLE_AQUI_A_URL_DO_SUPABASE";
-const SUPABASE_KEY = "COLE_AQUI_A_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://ubqvoerztcmbwczmcxca.supabase.co";
+const SUPABASE_KEY = "sb_publishable_1iorRGnWIqFmiHI_NXwPGw_i2XEy-gc";
+
+// IA (Claude): deixe false para usar o app grátis, só com as receitas do próprio app.
+// Mude para true depois de fazer os Passos 3 e 4 do GUIA (chave da Anthropic + robô "ia" no Supabase).
+const IA_LIGADA = false;
 
 const DEMO = SUPABASE_URL.includes("COLE_AQUI");
 const sb = DEMO ? null : window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -286,6 +290,214 @@ const RECEITAS = [
   {n:"Fritada de forno com legumes",t:["jantar","café da manhã"],m:35,k:380,e:["forno"],i:["ovo","abobrinha|tomate|cebola|espinafre|brocolis|batata"],d:"Use os legumes que estão sobrando."},
   {n:"Polenta com molho de carne",t:["almoço","jantar"],m:40,k:550,e:["fogão"],i:["fuba","carne moida","molho de tomate|tomate"],d:"Cremosa e econômica."},
 ];
+
+// Modo de preparo das receitas do app (rende cerca de 4 porções)
+const PREPARO = {
+  "Arroz, feijão e bife acebolado": [
+    "Arroz: refogue 1 dente de alho picado em 1 col. de óleo, junte 2 xícaras de arroz e mexa 1 minuto. Coloque 4 xícaras de água quente e sal, tampe e cozinhe em fogo baixo por ~15 min, até secar.",
+    "Feijão: se for cru, deixe 2 xícaras de molho por 8 h, cozinhe na pressão com água cobrindo 3 dedos por ~25 min. Depois refogue alho e cebola, junte o feijão e deixe engrossar.",
+    "Tempere 4 bifes (~500 g) com sal, alho e pimenta.",
+    "Aqueça bem uma frigideira com um fio de óleo e frite os bifes 2–3 min de cada lado. Reserve.",
+    "Na mesma frigideira, doure 2 cebolas em rodelas e coloque por cima dos bifes.",
+  ],
+  "Frango grelhado com legumes salteados": [
+    "Corte 600 g de peito de frango em filés finos e tempere com sal, alho, limão e pimenta. Deixe 10 min.",
+    "Corte os legumes (cenoura, abobrinha, brócolis…) em pedaços pequenos e parecidos.",
+    "Grelhe os filés em frigideira quente com um fio de óleo, 3–4 min de cada lado. Reserve.",
+    "Na mesma frigideira, refogue os legumes com alho por 5–7 min, mexendo, até ficarem macios mas crocantes. Acerte o sal.",
+    "Sirva o frango com os legumes (e arroz, se quiser).",
+  ],
+  "Macarrão à bolonhesa": [
+    "Refogue 1 cebola e 2 dentes de alho picados em 2 col. de óleo.",
+    "Junte 500 g de carne moída e mexa até perder a cor rosada, soltando bem os grumos.",
+    "Acrescente 1 sachê/caixinha de molho de tomate (ou 4 tomates picados), sal, orégano e ½ xícara de água. Cozinhe tampado em fogo baixo por 15 min.",
+    "Enquanto isso, cozinhe 500 g de macarrão em bastante água fervente com sal, pelo tempo da embalagem. Escorra.",
+    "Misture o macarrão ao molho (ou sirva o molho por cima). Finalize com queijo ralado.",
+  ],
+  "Omelete de queijo e tomate": [
+    "Bata 2 ovos por pessoa com sal e pimenta, só até misturar.",
+    "Pique 1 tomate sem sementes e separe o queijo picado ou ralado.",
+    "Aqueça uma frigideira antiaderente com um fio de óleo ou manteiga em fogo médio e despeje os ovos.",
+    "Quando as bordas firmarem, coloque tomate e queijo em metade da omelete.",
+    "Dobre ao meio, tampe por 1 minuto para o queijo derreter e sirva.",
+  ],
+  "Escondidinho de carne moída": [
+    "Cozinhe 1 kg de batata ou mandioca descascada em água com sal até ficar bem macia (~20 min). Escorra.",
+    "Amasse ainda quente com 1 col. de manteiga e ½ xícara de leite até virar um purê. Acerte o sal.",
+    "Refogue cebola e alho, junte 500 g de carne moída, sal e temperos e cozinhe até secar. Se quiser, junte molho de tomate.",
+    "Num refratário, coloque a carne no fundo e cubra com o purê. Polvilhe queijo ralado.",
+    "Leve ao forno a 200 °C por ~20 min, até dourar.",
+  ],
+  "Strogonoff de frango": [
+    "Corte 600 g de frango em cubos e tempere com sal e alho.",
+    "Doure o frango em 2 col. de óleo com 1 cebola picada.",
+    "Junte 3 col. de molho de tomate (ou ketchup) e 1 col. de mostarda, se tiver. Cozinhe 5 min.",
+    "Desligue o fogo e misture 1 caixinha de creme de leite. Volte ao fogo baixo só para aquecer, sem ferver.",
+    "Sirva com arroz branco e batata palha.",
+  ],
+  "Sopa de legumes com macarrão": [
+    "Refogue 1 cebola e 2 dentes de alho em um fio de óleo numa panela grande.",
+    "Junte 3 batatas e 2 cenouras em cubos (e outros legumes que tiver) e 1,5 L de água quente com sal.",
+    "Cozinhe por ~15 min, até os legumes ficarem macios.",
+    "Acrescente 1 xícara de macarrão pequeno (letrinha, conchinha) e cozinhe mais 8 min.",
+    "Acerte o sal e finalize com cheiro-verde.",
+  ],
+  "Panqueca de carne": [
+    "Bata no liquidificador 2 xícaras de leite, 2 ovos, 1½ xícara de farinha de trigo, 1 col. de óleo e uma pitada de sal.",
+    "Numa frigideira untada e quente, espalhe uma concha da massa e doure 1 min de cada lado. Repita até acabar.",
+    "Recheio: refogue cebola e alho, junte 500 g de carne moída e tempere. Cozinhe até secar.",
+    "Recheie e enrole cada panqueca e arrume num refratário.",
+    "Cubra com molho de tomate e queijo ralado e aqueça no forno ou micro-ondas.",
+  ],
+  "Tapioca com queijo": [
+    "Peneire a goma de tapioca, se estiver empedrada.",
+    "Aqueça uma frigideira antiaderente seca em fogo médio.",
+    "Espalhe 3 col. de goma por pessoa, cobrindo o fundo, e aperte levemente com a colher.",
+    "Quando a goma grudar e formar um disco (~1 min), coloque o queijo em metade.",
+    "Dobre ao meio e deixe mais 30 s para o queijo derreter.",
+  ],
+  "Cuscuz nordestino com ovo": [
+    "Misture 2 xícaras de flocão com 1 col. (chá) de sal e cerca de 1 xícara de água, até ficar úmido como farofa. Descanse 10 min.",
+    "Coloque água no fundo da cuscuzeira, a massa por cima sem apertar, tampe e cozinhe por ~10 min após levantar vapor.",
+    "Enquanto isso, frite ou mexa os ovos (1 a 2 por pessoa).",
+    "Sirva o cuscuz com manteiga e os ovos por cima.",
+  ],
+  "Pão de queijo de frigideira": [
+    "Misture 1 ovo, 3 col. de polvilho (ou goma de tapioca), 2 col. de queijo ralado, 2 col. de leite e uma pitada de sal. Rende 1 porção.",
+    "Aqueça uma frigideira pequena antiaderente untada em fogo baixo.",
+    "Despeje a massa, tampe e deixe ~3 min, até firmar.",
+    "Vire e doure mais 2 min. Pode rechear com queijo ou presunto.",
+  ],
+  "Vitamina de banana com aveia": [
+    "Coloque no liquidificador 2 bananas, 2 copos de leite e 2 col. de aveia (rende 2 copos).",
+    "Se quiser, junte 1 col. de mel ou açúcar e canela.",
+    "Bata por 1 minuto e sirva gelada.",
+  ],
+  "Mingau de aveia com canela": [
+    "Numa panela, coloque 2 xícaras de leite e 6 col. de aveia (rende 2 porções).",
+    "Leve ao fogo médio mexendo sempre até engrossar (~5 min).",
+    "Adoce a gosto e polvilhe canela.",
+    "Sirva com banana ou outra fruta picada por cima.",
+  ],
+  "Frango assado com batatas": [
+    "Tempere 1 kg de coxas/sobrecoxas com sal, alho, limão, páprica e azeite. Se der, deixe 30 min.",
+    "Corte 4 batatas em gomos (não precisa descascar) e tempere com sal, azeite e alecrim.",
+    "Arrume tudo numa assadeira, cubra com papel-alumínio e asse a 200 °C por 30 min.",
+    "Tire o papel e asse mais 25–30 min, até o frango e as batatas dourarem.",
+  ],
+  "Peixe ao forno com legumes": [
+    "Tempere 4 filés de peixe com sal, alho, limão e pimenta.",
+    "Corte 3 batatas em rodelas finas, 1 cebola e 2 tomates em rodelas.",
+    "Numa assadeira untada, faça uma camada de batata, coloque o peixe e cubra com cebola e tomate.",
+    "Regue com azeite, cubra com papel-alumínio e asse a 200 °C por 25 min.",
+    "Tire o papel e asse mais 10 min.",
+  ],
+  "Feijão tropeiro": [
+    "Cozinhe 2 xícaras de feijão (de preferência carioquinha) até ficar macio mas inteiro. Escorra bem.",
+    "Frite 200 g de bacon ou linguiça em cubos até dourar.",
+    "Junte 1 cebola e 2 dentes de alho e refogue. Quebre 3 ovos e mexa até cozinhar.",
+    "Junte o feijão e, aos poucos, 1 xícara de farinha de mandioca, mexendo até ficar soltinho.",
+    "Acerte o sal e finalize com cebolinha e couve refogada, se tiver.",
+  ],
+  "Arroz de forno": [
+    "Use 4 xícaras de arroz cozido (ótimo para sobras).",
+    "Misture o arroz com o recheio picado (frango, presunto, atum ou calabresa), milho/ervilha e 3 col. de molho de tomate.",
+    "Coloque num refratário e cubra com 200 g de queijo mussarela.",
+    "Leve ao forno a 200 °C por ~20 min, até o queijo derreter e dourar.",
+  ],
+  "Salada de grão-de-bico com atum": [
+    "Se o grão-de-bico for cru, deixe de molho por 8 h e cozinhe na pressão por 20 min. O de lata é só escorrer.",
+    "Pique tomate, pepino, cebola roxa e folhas que tiver.",
+    "Misture 2 xícaras de grão-de-bico, 2 latas de atum escorrido e os vegetais.",
+    "Tempere com azeite, limão, sal e cheiro-verde na hora de servir.",
+  ],
+  "Hambúrguer caseiro na airfryer": [
+    "Misture 500 g de carne moída com sal, pimenta e ½ cebola ralada. Não amasse demais.",
+    "Modele 4 discos achatados, com um furinho no centro para não estufar.",
+    "Asse na airfryer a 200 °C por 12–15 min, virando na metade.",
+    "No último minuto, coloque uma fatia de queijo por cima.",
+    "Monte no pão com alface, tomate e o molho que preferir.",
+  ],
+  "Batata rústica na airfryer": [
+    "Lave bem 4 batatas e corte em gomos, sem descascar.",
+    "Se der, deixe 10 min de molho em água e seque bem com um pano.",
+    "Tempere com 1 col. de azeite, sal, alho em pó, páprica e alecrim.",
+    "Asse a 200 °C por 20–25 min, sacudindo o cesto na metade.",
+  ],
+  "Torta de liquidificador de frango": [
+    "Recheio: refogue 2 xícaras de frango cozido e desfiado (ou 2 latas de sardinha/atum) com cebola, tomate, milho e sal.",
+    "Bata no liquidificador 3 ovos, 2 xícaras de leite, ½ xícara de óleo, 2 xícaras de farinha de trigo, 1 col. (chá) de sal e 1 col. (sopa) de fermento.",
+    "Numa forma untada, coloque metade da massa, o recheio e o resto da massa.",
+    "Polvilhe queijo ralado e asse a 180 °C por ~40 min, até dourar e o palito sair limpo.",
+  ],
+  "Risoto de frango": [
+    "Refogue 1 cebola picada em 2 col. de manteiga ou óleo.",
+    "Junte 2 xícaras de arroz (cru) e mexa 2 min.",
+    "Vá colocando caldo quente (1,5 L de água com 1 tablete de caldo) uma concha por vez, mexendo sempre, até o arroz ficar cremoso (~18 min).",
+    "Junte 2 xícaras de frango cozido e desfiado.",
+    "Desligue e misture queijo ralado ou requeijão. Sirva na hora.",
+  ],
+  "Carne de panela com batata e cenoura": [
+    "Corte 1 kg de acém ou músculo em cubos grandes e tempere com sal, alho e pimenta.",
+    "Doure a carne na panela de pressão com óleo, em partes. Junte cebola, tomate e 2 col. de molho de tomate.",
+    "Cubra com água quente, feche e cozinhe por 30 min após pegar pressão.",
+    "Espere a pressão sair, junte 3 batatas e 2 cenouras em pedaços e cozinhe sem tampa por ~15 min, até ficarem macias e o caldo engrossar.",
+  ],
+  "Lentilha com arroz e legumes": [
+    "Cozinhe 1 xícara de lentilha em água por ~20 min, até ficar macia (não precisa de molho). Escorra.",
+    "Doure 2 cebolas em tiras no óleo até ficarem bem moreninhas. Reserve metade.",
+    "Junte à panela 1 xícara de arroz, a lentilha, 1 cenoura ralada, sal e 2½ xícaras de água quente.",
+    "Tampe e cozinhe em fogo baixo até secar (~15 min). Sirva com a cebola dourada por cima.",
+  ],
+  "Ovos mexidos com pão": [
+    "Bata 2 ovos por pessoa com sal.",
+    "Derreta um pouco de manteiga numa frigideira em fogo baixo e despeje os ovos.",
+    "Mexa devagar com espátula até ficarem cremosos. Tire do fogo um pouco antes do ponto.",
+    "Sirva com pão (tostado, se quiser).",
+  ],
+  "Sanduíche natural": [
+    "Prepare o recheio: frango desfiado ou atum misturado com 1 col. de requeijão ou maionese, cenoura ralada, sal e cheiro-verde.",
+    "Passe o recheio em uma fatia de pão (ou na tortilha).",
+    "Coloque alface e tomate em rodelas e feche com a outra fatia.",
+    "Para a marmita, embrulhe em filme plástico e mantenha na geladeira.",
+  ],
+  "Iogurte com frutas e granola": [
+    "Coloque 1 pote de iogurte natural por pessoa numa tigela ou copo.",
+    "Pique a fruta (banana, maçã, morango, mamão…) por cima.",
+    "Finalize com 2 col. de granola ou aveia e um fio de mel, se quiser.",
+  ],
+  "Bolo de caneca de banana": [
+    "Numa caneca grande, amasse 1 banana madura com um garfo.",
+    "Junte 1 ovo, 2 col. de aveia (ou farinha), 1 col. de cacau ou canela e 1 col. (café) de fermento. Misture bem.",
+    "Leve ao micro-ondas por 2 a 2½ minutos na potência alta.",
+    "Espere 1 minuto antes de comer (fica muito quente por dentro).",
+  ],
+  "Purê de abóbora com carne moída": [
+    "Cozinhe 1 kg de abóbora (cabotiá) em cubos em pouca água com sal até ficar macia (~15 min).",
+    "Escorra e amasse com 1 col. de manteiga até virar purê. Acerte o sal.",
+    "Refogue cebola e alho, junte 500 g de carne moída e tempere. Cozinhe até secar.",
+    "Sirva o purê com a carne por cima e cheiro-verde.",
+  ],
+  "Yakissoba caseiro": [
+    "Cozinhe 500 g de macarrão (ou 3 pacotes de miojo, sem o tempero) e escorra.",
+    "Corte 500 g de frango ou carne em tiras e doure em frigideira bem quente com óleo. Reserve.",
+    "Na mesma frigideira, salteie os legumes em tiras (cenoura, repolho, brócolis, cebola) por 3–4 min. Devem ficar crocantes.",
+    "Misture ½ xícara de shoyu, ½ xícara de água e 1 col. de amido de milho. Junte à frigideira com a carne e mexa até engrossar.",
+    "Junte o macarrão e misture bem.",
+  ],
+  "Fritada de forno com legumes": [
+    "Pique os legumes que tiver (abobrinha, tomate, cebola, brócolis, batata cozida…).",
+    "Bata 6 ovos com ½ xícara de leite, sal, pimenta e queijo ralado.",
+    "Espalhe os legumes num refratário untado e despeje os ovos por cima.",
+    "Asse a 180 °C por ~25 min, até firmar e dourar.",
+  ],
+  "Polenta com molho de carne": [
+    "Molho: refogue cebola e alho, junte 500 g de carne moída, depois molho de tomate e ½ xícara de água. Cozinhe 15 min.",
+    "Polenta: dissolva 1½ xícara de fubá em 1 L de água fria com sal (assim não empelota).",
+    "Leve ao fogo mexendo sempre até ferver. Abaixe o fogo e cozinhe mais ~15 min, mexendo de vez em quando.",
+    "Sirva a polenta cremosa com o molho por cima e queijo ralado.",
+  ],
+};
 
 // =====================================================================
 //  ESTADO
@@ -554,7 +766,7 @@ function receitaParaRefeicao(r, tipo) {
   const fatia = { "café da manhã":0.2, "almoço":0.35, "lanche":0.12, "jantar":0.3 }[tipo] ?? 0.3;
   return {
     tipo, nome: r.n, descricao: r.d, tempo_min: r.m, dificuldade: r.m > 45 ? "média" : "fácil",
-    equipamentos: r.e, kcal_porcao: r.k, origem: "base",
+    equipamentos: r.e, kcal_porcao: r.k, origem: "base", modo_preparo: PREPARO[r.n],
     porcoes: pessoas.map(p => {
       const alvo = (p.nome === "Porção" ? 2000 : metaKcal(p).kcal) * fatia;
       const mult = Math.max(0.5, Math.round(alvo / r.k * 2) / 2);
@@ -788,8 +1000,9 @@ async function mudarQtd(id, sinal) {
 
 function menuAdicionar() {
   abrirFolha(`<h2>Adicionar à despensa</h2>
+    ${IA_LIGADA ? `
     <button class="opcao" onclick="$('arquivoFoto').click()"><span class="ico">📷</span><div><b>Fotografar nota ou lista</b><small>Cupom fiscal (lê o QR Code da NFC-e) ou lista escrita à mão</small></div></button>
-    <button class="opcao" onclick="$('arquivoGaleria').click()"><span class="ico">🖼️</span><div><b>Escolher foto da galeria</b><small>Print ou foto já tirada da nota/lista</small></div></button>
+    <button class="opcao" onclick="$('arquivoGaleria').click()"><span class="ico">🖼️</span><div><b>Escolher foto da galeria</b><small>Print ou foto já tirada da nota/lista</small></div></button>` : ""}
     <button class="opcao" onclick="formColarLista()"><span class="ico">📝</span><div><b>Colar ou digitar lista</b><small>Ex.: "2 kg arroz, 1 dz ovos, leite"</small></div></button>
     <button class="opcao" onclick="formItem()"><span class="ico">✏️</span><div><b>Adicionar um item</b><small>Preencher manualmente</small></div></button>`);
 }
@@ -847,6 +1060,7 @@ function formColarLista() {
 async function processarTexto() {
   const texto = $("fLista").value.trim();
   if (!texto) return toast("Cole ou digite a lista.");
+  if (!IA_LIGADA) return revisarItens(lerListaSimples(texto));
   carregando("Lendo a lista…");
   try { const r = await ia("ler_texto", { texto }); revisarItens(r.itens, r.observacao); }
   catch (e) { toast("IA indisponível, li do jeito simples. (" + e.message + ")", 4500); revisarItens(lerListaSimples(texto)); }
@@ -1017,8 +1231,11 @@ function formCardapio() {
     </div>
     <label class="campo"><span>Algum pedido especial? (opcional)</span><input id="cExtra" type="text" placeholder="Ex.: sexta é dia de pizza; mais peixe; marmita para o almoço"></label>
     <p class="muted">Pessoas consideradas: ${S.pessoas.length ? S.pessoas.map(x => esc(x.nome)).join(", ") : "nenhum perfil cadastrado (usa 2 adultos)"}.</p>
+    ${IA_LIGADA ? `
     <button class="btn bloco" onclick="gerarCardapio(true)">✨ Gerar com IA</button>
-    <button class="btn cinza bloco" style="margin-top:8px" onclick="gerarCardapio(false)">⚡ Gerar rápido com receitas do app (sem IA)</button>`);
+    <button class="btn cinza bloco" style="margin-top:8px" onclick="gerarCardapio(false)">⚡ Gerar rápido com receitas do app (sem IA)</button>`
+    : `<button class="btn bloco" onclick="gerarCardapio(false)">✨ Gerar cardápio</button>
+    <p class="muted" style="text-align:center">Montado com as ${RECEITAS.length} receitas do app, priorizando o que você tem em casa.</p>`}`);
 }
 
 async function gerarCardapio(comIA) {
@@ -1070,6 +1287,7 @@ function abrirFavorita(i) {
 }
 function mostrarReceita() {
   const r = S.receitaAberta.ref;
+  if (!r.modo_preparo && PREPARO[r.nome]) r.modo_preparo = PREPARO[r.nome];
   const fav = S.favoritas.some(f => f.nome === r.nome);
   const corDe = (nome) => S.pessoas.find(p => p.nome === nome)?.cor || "#a8a29e";
   abrirFolha(`<div class="muted" style="text-transform:uppercase;font-size:11px;font-weight:700">${esc(r.tipo)}</div>
@@ -1087,7 +1305,8 @@ function mostrarReceita() {
 
     <div class="card"><b>👩‍🍳 Modo de preparo</b>
       ${r.modo_preparo ? `<ol class="passos">${r.modo_preparo.map(p => `<li>${esc(p)}</li>`).join("")}</ol>${r.dica ? `<div class="aviso" style="margin:8px 0 0">💡 ${esc(r.dica)}</div>` : ""}`
-      : `<p class="muted">O passo a passo é gerado na hora, só quando você precisa (economiza IA).</p><button class="btn sec bloco" onclick="carregarPreparo()">Ver modo de preparo</button>`}
+      : IA_LIGADA ? `<p class="muted">O passo a passo é gerado na hora, só quando você precisa (economiza IA).</p><button class="btn sec bloco" onclick="carregarPreparo()">Ver modo de preparo</button>`
+      : `<p class="muted">Passo a passo indisponível para esta receita.</p>`}
     </div>
 
     <div class="linha-btns">
